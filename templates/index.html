@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Breast Cancer Detection</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #faf8f5;
+    --surface: #ffffff;
+    --border: #e8e3dc;
+    --text: #1a1814;
+    --muted: #6b6660;
+    --benign: #0f6e56;
+    --benign-bg: #e1f5ee;
+    --malignant: #993c1d;
+    --malignant-bg: #faece7;
+    --accent: #534ab7;
+    --accent-bg: #eeedfe;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+    color: var(--text);
+  }
+
+  .logo span { color: var(--accent); }
+
+  .accuracy-badge {
+    background: var(--accent-bg);
+    color: var(--accent);
+    font-size: 0.8rem;
+    font-weight: 600;
+    padding: 0.3rem 0.8rem;
+    border-radius: 100px;
+    letter-spacing: 0.02em;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 2.5rem 1.5rem;
+  }
+
+  .hero {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .hero h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2.6rem;
+    font-weight: 400;
+    line-height: 1.2;
+    margin-bottom: 0.75rem;
+  }
+
+  .hero h1 em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .hero p {
+    color: var(--muted);
+    font-size: 1rem;
+    max-width: 520px;
+    margin: 0 auto 1.5rem;
+    line-height: 1.6;
+  }
+
+  .sample-btns {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .sample-btn {
+    padding: 0.5rem 1.2rem;
+    border-radius: 100px;
+    border: 1.5px solid;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .sample-btn.benign {
+    border-color: var(--benign);
+    color: var(--benign);
+    background: transparent;
+  }
+  .sample-btn.benign:hover { background: var(--benign-bg); }
+
+  .sample-btn.malignant {
+    border-color: var(--malignant);
+    color: var(--malignant);
+    background: transparent;
+  }
+  .sample-btn.malignant:hover { background: var(--malignant-bg); }
+
+  .sample-btn.clear {
+    border-color: var(--border);
+    color: var(--muted);
+    background: transparent;
+  }
+  .sample-btn.clear:hover { background: var(--bg); }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .card-title {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 1.25rem;
+  }
+
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+
+  .feature-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+  }
+
+  .feature-field label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--text);
+    text-transform: capitalize;
+  }
+
+  .feature-field input {
+    padding: 0.55rem 0.75rem;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    background: var(--bg);
+    color: var(--text);
+    transition: border-color 0.15s;
+    -moz-appearance: textfield;
+  }
+
+  .feature-field input::-webkit-inner-spin-button,
+  .feature-field input::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+  .feature-field input:focus {
+    outline: none;
+    border-color: var(--accent);
+    background: var(--surface);
+  }
+
+  .predict-btn {
+    width: 100%;
+    padding: 1rem;
+    background: var(--text);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: opacity 0.15s, transform 0.1s;
+    margin-top: 0.5rem;
+    letter-spacing: 0.01em;
+  }
+
+  .predict-btn:hover { opacity: 0.85; }
+  .predict-btn:active { transform: scale(0.99); }
+  .predict-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .result-card {
+    display: none;
+    border-radius: 16px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    animation: slideUp 0.3s ease;
+  }
+
+  .result-card.benign {
+    background: var(--benign-bg);
+    border: 1.5px solid var(--benign);
+  }
+
+  .result-card.malignant {
+    background: var(--malignant-bg);
+    border: 1.5px solid var(--malignant);
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .result-label {
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-card.benign .result-label { color: var(--benign); }
+  .result-card.malignant .result-label { color: var(--malignant); }
+
+  .result-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 2rem;
+    font-weight: 400;
+    margin-bottom: 0.4rem;
+  }
+
+  .result-card.benign .result-title { color: var(--benign); }
+  .result-card.malignant .result-title { color: var(--malignant); }
+
+  .result-sub {
+    font-size: 0.9rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+  }
+
+  .prob-bars { display: flex; flex-direction: column; gap: 0.6rem; }
+
+  .prob-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  .prob-name { width: 80px; color: var(--muted); font-weight: 500; }
+
+  .prob-track {
+    flex: 1;
+    height: 6px;
+    background: rgba(0,0,0,0.08);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .prob-fill {
+    height: 100%;
+    border-radius: 100px;
+    transition: width 0.6s ease;
+  }
+
+  .benign-fill { background: var(--benign); }
+  .malignant-fill { background: var(--malignant); }
+  .prob-val { font-weight: 600; font-size: 0.85rem; min-width: 40px; text-align: right; }
+
+  .disclaimer {
+    background: #fff8e7;
+    border: 1px solid #f0c040;
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    font-size: 0.82rem;
+    color: #7a5c00;
+    line-height: 1.5;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Onco<span>Detect</span></div>
+  <div class="accuracy-badge">Model accuracy: {{ accuracy }}%</div>
+</header>
+
+<div class="container">
+
+  <div class="hero">
+    <h1>Breast Cancer <em>Detection</em></h1>
+    <p>Enter 30 cell nucleus features from an FNA biopsy image to classify the tumor as benign or malignant.</p>
+    <div class="sample-btns">
+      <button class="sample-btn benign" onclick="fillSample('benign')">⬤ Fill benign sample</button>
+      <button class="sample-btn malignant" onclick="fillSample('malignant')">⬤ Fill malignant sample</button>
+      <button class="sample-btn clear" onclick="clearAll()">✕ Clear all</button>
+    </div>
+  </div>
+
+  <div id="result-card" class="result-card">
+    <div class="result-label">Prediction result</div>
+    <div class="result-title" id="result-title">—</div>
+    <div class="result-sub" id="result-sub">—</div>
+    <div class="prob-bars">
+      <div class="prob-row">
+        <span class="prob-name">Benign</span>
+        <div class="prob-track"><div class="prob-fill benign-fill" id="benign-bar" style="width:0%"></div></div>
+        <span class="prob-val" id="benign-val">—</span>
+      </div>
+      <div class="prob-row">
+        <span class="prob-name">Malignant</span>
+        <div class="prob-track"><div class="prob-fill malignant-fill" id="malignant-bar" style="width:0%"></div></div>
+        <span class="prob-val" id="malignant-val">—</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Cell nucleus features — 30 inputs</div>
+    <div class="features-grid" id="features-grid">
+      {% for name in features %}
+      <div class="feature-field">
+        <label for="f_{{ loop.index0 }}">{{ name }}</label>
+        <input type="number" id="f_{{ loop.index0 }}" name="{{ name }}" step="any" placeholder="0.0000">
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <button class="predict-btn" id="predict-btn" onclick="runPrediction()">Analyse tumor →</button>
+
+  <div class="disclaimer">
+    ⚠️ <strong>Medical disclaimer:</strong> This tool is for educational and research purposes only. It is not a substitute for professional medical diagnosis. Always consult a qualified healthcare provider.
+  </div>
+
+</div>
+
+<script>
+const FEATURE_NAMES = {{ features | tojson }};
+const SAMPLE_BENIGN = {{ sample_benign | tojson }};
+const SAMPLE_MALIGNANT = {{ sample_malignant | tojson }};
+
+function fillSample(type) {
+  const values = type === 'benign' ? SAMPLE_BENIGN : SAMPLE_MALIGNANT;
+  FEATURE_NAMES.forEach((name, i) => {
+    document.getElementById(`f_${i}`).value = values[i];
+  });
+}
+
+function clearAll() {
+  FEATURE_NAMES.forEach((_, i) => {
+    document.getElementById(`f_${i}`).value = '';
+  });
+  document.getElementById('result-card').style.display = 'none';
+}
+
+async function runPrediction() {
+  const data = {};
+  let missing = false;
+  FEATURE_NAMES.forEach((name, i) => {
+    const val = document.getElementById(`f_${i}`).value;
+    if (val === '') missing = true;
+    data[name] = val;
+  });
+
+  if (missing) {
+    alert('Please fill all 30 fields, or use a sample button to auto-fill.');
+    return;
+  }
+
+  const btn = document.getElementById('predict-btn');
+  btn.disabled = true;
+  btn.textContent = 'Analysing…';
+
+  try {
+    const res = await fetch('/predict', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data)
+    });
+    const json = await res.json();
+
+    if (json.error) { alert('Error: ' + json.error); return; }
+
+    const card = document.getElementById('result-card');
+    card.className = 'result-card ' + json.result.toLowerCase();
+    card.style.display = 'block';
+
+    document.getElementById('result-title').textContent = json.result;
+    document.getElementById('result-sub').textContent =
+      `Confidence: ${json.confidence}% · The model predicts this tumor is ${json.result.toLowerCase()}.`;
+
+    setTimeout(() => {
+      document.getElementById('benign-bar').style.width = json.benign_prob + '%';
+      document.getElementById('malignant-bar').style.width = json.malignant_prob + '%';
+    }, 50);
+    document.getElementById('benign-val').textContent = json.benign_prob + '%';
+    document.getElementById('malignant-val').textContent = json.malignant_prob + '%';
+
+    card.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  } catch (e) {
+    alert('Request failed: ' + e.message);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Analyse tumor →';
+  }
+}
+</script>
+</body>
+</html>
