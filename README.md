@@ -155,13 +155,4 @@ This tool is for **educational and research purposes only**. It is not a substit
 
 ---
 
-## 📄 License
 
-This project is licensed under the MIT License — see the [LICENSE](LICENSE) file for details.
-
----
-
-## 👤 Author
-
-**Rohan Canish**  
-GitHub: [@rohancanish](https://github.com/rohancanish)
